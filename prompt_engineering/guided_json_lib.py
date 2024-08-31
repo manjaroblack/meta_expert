@@ -14,7 +14,7 @@ guided_json_best_url = {
   "properties": {
     "best_url": {
       "type": "string",
-      "description": "The URL of the Serper results that aligns most with the instructions from your manager."
+      "description": "The URL of the search results that aligns most with the instructions from your manager."
     },
     "pdf": {
       "type": "boolean",

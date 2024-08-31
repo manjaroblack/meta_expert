@@ -3,4 +3,8 @@ GEMINI_API_KEY:
 GROQ_API_KEY: 
 OPENAI_API_KEY: 
 SERPER_API_KEY: 
-LLM_SHERPA_SERVER: http://localhost:5010/api/parseDocument?renderFormat=all
+SEARXNG_URL: http://192.168.100.52:8080/
+LLM_SHERPA_SERVER: http://192.168.4.253:5010/api/parseDocument?renderFormat=all&useNewIndentParser=yes
+MODEL: llama3.1:8b-instruct-q5_K_M
+SERVER: ollama
+TEMPERATURE: '0.5'

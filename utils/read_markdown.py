@@ -11,7 +11,7 @@ def read_markdown_file(file_path: str) -> str:
 
     Returns:
         str: The content of the markdown file as a string.
-             Returns an empty string if the file cannot be read.
+            Returns an empty string if the file cannot be read.
 
     Raises:
         FileNotFoundError: If the specified file does not exist.

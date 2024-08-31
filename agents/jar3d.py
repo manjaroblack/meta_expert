@@ -12,6 +12,7 @@ from utils.read_markdown import read_markdown_file
 from tools.rag_tool import rag_tool
 from tools.advanced_scraper import scraper
 from tools.google_serper import serper_search
+from tools.searxng import searxng_search
 from utils.logging import log_function, setup_logging
 from utils.message_handling import get_ai_message_contents
 from prompt_engineering.guided_json_lib import (
@@ -383,9 +384,9 @@ class ToolExpert(BaseAgent[State]):
         pass
 
     def use_tool(self, mode: str, tool_input: str, query: str = None) -> Any:
-        if mode == "serper":
-            results = serper_search(tool_input)
-            return results
+        if mode == "search":
+            results = searxng_search(query=query)
+            return {"results": results}
         elif mode == "rag":
             results = rag_tool(url=tool_input, query=query)
             return results
@@ -450,18 +451,18 @@ class ToolExpert(BaseAgent[State]):
             """
 
         best_url_template = """
-            Given the serper results, and the instructions from your manager. Select the best URL
+            Given the search results, and the instructions from your manager. Select the best URL
 
             # Manger Instructions
             {manager_instructions}
 
-            # Serper Results
-            {serper_results}
+            # Search Results
+            {search_results}
 
             **Return the following JSON:**
 
 
-            {{"best_url": The URL of the serper results that aligns most with the instructions from your manager.,
+            {{"best_url": The URL of the search results that aligns most with the instructions from your manager.,
             "pdf": A boolean value indicating whether the URL is a PDF or not. This should be True if the URL is a PDF, and False otherwise.}}
 
         """
@@ -492,9 +493,9 @@ class ToolExpert(BaseAgent[State]):
         serper_response = self.use_tool("serper", refined_query)
 
         best_url = self.get_llm(json_model=True)
-        best_url_prompt = best_url_template.format(manager_instructions=meta_prompt, serper_results=serper_response)
+        best_url_prompt = best_url_template.format(manager_instructions=meta_prompt, search_results=search_response)
         input = [
-                {"role": "user", "content": serper_response},
+                {"role": "user", "content": search_response},
                 {"role": "assistant", "content": f"system_prompt:{best_url_prompt}"}
 
             ]
@@ -598,11 +599,11 @@ if __name__ == "__main__":
     from langgraph.graph import StateGraph
 
     # For Claude
-    agent_kwargs = {
-        "model": "claude-3-5-sonnet-20240620",
-        "server": "claude",
-        "temperature": 0
-    }
+    # agent_kwargs = {
+    #     "model": "claude-3-5-sonnet-20240620",
+    #     "server": "claude",
+    #     "temperature": 0
+    # }
 
     # For OpenAI
     # agent_kwargs = {
@@ -612,11 +613,11 @@ if __name__ == "__main__":
     # }
 
     # Ollama
-    # agent_kwargs = {
-    #     "model": "phi3:instruct",
-    #     "server": "ollama",
-    #     "temperature": 0.5
-    # }
+    agent_kwargs = {
+        "model": "phi3.5:3.8b-mini-instruct-q8_0",
+        "server": "ollama",
+        "temperature": 0.5
+    }
 
     # Groq
     # agent_kwargs = {

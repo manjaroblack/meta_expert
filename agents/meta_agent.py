@@ -8,7 +8,7 @@ from langgraph.graph.message import add_messages
 from agents.base_agent import BaseAgent
 from utils.read_markdown import read_markdown_file
 from tools.advanced_scraper import scraper
-from tools.google_serper import serper_search
+from tools.searxng import searxng_search
 from utils.logging import log_function, setup_logging
 from utils.message_handling import get_ai_message_contents
 from prompt_engineering.guided_json_lib import guided_json_search_query, guided_json_best_url, guided_json_router_decision
@@ -206,8 +206,8 @@ class ToolExpert(BaseAgent[State]):
         pass
 
     def use_tool(self, mode: str, tool_input: str, doc_type: str = None) -> Any:
-        if mode == "serper":
-            results = serper_search(tool_input)
+        if mode == "search":
+            results = searxng_search(tool_input)
             return results
         elif mode == "scraper":
             results = scraper(tool_input, doc_type)
@@ -232,18 +232,18 @@ class ToolExpert(BaseAgent[State]):
         """
 
         best_url_template = """
-            Given the serper results, and the instructions from your manager. Select the best URL
+            Given the search results, and the instructions from your manager. Select the best URL
 
             # Manger Instructions
             {manager_response}
 
-            # Serper Results
-            {serper_results}
+            # Search Results
+            {search_results}
 
             **Return the following JSON:**
 
 
-            {{"best_url": The URL of the serper results that aligns most with the instructions from your manager.,
+            {{"best_url": The URL of the search results that aligns most with the instructions from your manager.,
             "pdf": A boolean value indicating whether the URL is a PDF or not. This should be True if the URL is a PDF, and False otherwise.}}
 
         """
@@ -268,12 +268,12 @@ class ToolExpert(BaseAgent[State]):
 
         refined_query_json = json.loads(refined_query)
         refined_query = refined_query_json.get("search_query")
-        serper_response = self.use_tool("serper", refined_query)
+        search_response = self.use_tool("search", refined_query)
 
         best_url = self.get_llm(json_model=True)
-        best_url_prompt = best_url_template.format(manager_response=full_query, serper_results=serper_response)
+        best_url_prompt = best_url_template.format(manager_response=full_query, search_results=search_response)
         input = [
-                {"role": "user", "content": serper_response},
+                {"role": "user", "content": search_response},
                 {"role": "assistant", "content": f"system_prompt:{best_url_prompt}"}
 
             ]
@@ -473,7 +473,7 @@ if __name__ == "__main__":
             break
 
         # current_time = datetime.now()
-        recursion_limit = 40
+        recursion_limit = 400
         state["recursion_limit"] = recursion_limit
         state["user_input"] = query
         limit = {"recursion_limit": recursion_limit}
